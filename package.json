@@ -1,0 +1,58 @@
+{
+  "name": "axuan-desktop-pet",
+  "version": "1.0.0",
+  "description": "A cute cross-platform desktop pet with local hydration reminders.",
+  "main": "src/main.js",
+  "author": "Axuan Desktop Pet contributors",
+  "license": "MIT",
+  "scripts": {
+    "start": "electron .",
+    "test": "node --test",
+    "pack": "electron-builder --dir --publish never",
+    "dist": "electron-builder --publish never"
+  },
+  "devDependencies": {
+    "electron": "43.2.0",
+    "electron-builder": "26.15.3"
+  },
+  "build": {
+    "appId": "com.axuan.desktop-pet",
+    "productName": "阿璇桌宠",
+    "artifactName": "Axuan-Desktop-Pet-${version}-${os}-${arch}.${ext}",
+    "files": [
+      "src/**/*",
+      "assets/**/*",
+      "package.json"
+    ],
+    "directories": {
+      "output": "dist"
+    },
+    "mac": {
+      "category": "public.app-category.lifestyle",
+      "icon": "assets/icon.png",
+      "target": [
+        "dmg",
+        "zip"
+      ]
+    },
+    "win": {
+      "icon": "assets/icon.png",
+      "target": [
+        "nsis",
+        "portable"
+      ]
+    },
+    "linux": {
+      "icon": "assets/icon.png",
+      "category": "Utility",
+      "target": [
+        "AppImage",
+        "deb"
+      ]
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true
+    }
+  }
+}

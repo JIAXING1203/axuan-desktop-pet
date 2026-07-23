@@ -3,7 +3,10 @@
   "version": "1.0.0",
   "description": "A cute cross-platform desktop pet with local hydration reminders.",
   "main": "src/main.js",
-  "author": "Axuan Desktop Pet contributors",
+  "author": {
+    "name": "Axuan Desktop Pet contributors",
+    "email": "noreply@users.noreply.github.com"
+  },
   "license": "MIT",
   "scripts": {
     "start": "electron .",

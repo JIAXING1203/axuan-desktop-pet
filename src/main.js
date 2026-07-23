@@ -22,7 +22,7 @@ let tray = null;
 let reminderTimer = null;
 let lastReminderKey = null;
 let quitting = false;
-let settings = { remindersEnabled: true };
+let settings = { petVisible: true, remindersEnabled: true };
 
 function settingsPath() {
   return path.join(app.getPath("userData"), "settings.json");
@@ -73,13 +73,23 @@ function createPetWindow() {
   petWindow.setAlwaysOnTop(true, "floating");
   petWindow.setVisibleOnAllWorkspaces(true, { visibleOnFullScreen: true });
   petWindow.loadFile(path.join(__dirname, "index.html"));
-  petWindow.once("ready-to-show", () => petWindow.showInactive());
+  petWindow.once("ready-to-show", () => {
+    if (settings.petVisible) petWindow.showInactive();
+  });
   petWindow.on("close", (event) => {
     if (!quitting) {
       event.preventDefault();
-      petWindow.hide();
+      setPetVisible(false);
     }
   });
+}
+
+function setPetVisible(visible) {
+  settings.petVisible = visible;
+  saveSettings();
+  if (visible) petWindow?.showInactive();
+  else petWindow?.hide();
+  if (tray) tray.setContextMenu(buildMenu());
 }
 
 function movePetBy(dx, dy) {
@@ -106,9 +116,11 @@ function showReminder() {
       silent: false,
     }).show();
   }
-  petWindow.showInactive();
-  petWindow.webContents.send("pet:reminder", DEFAULT_SCHEDULE.message);
-  if (process.platform === "darwin" && app.dock) {
+  if (settings.petVisible) {
+    petWindow.showInactive();
+    petWindow.webContents.send("pet:reminder", DEFAULT_SCHEDULE.message);
+  }
+  if (settings.petVisible && process.platform === "darwin" && app.dock) {
     app.dock.bounce("informational");
   }
 }
@@ -140,8 +152,10 @@ function setOpenAtLogin(enabled) {
 function buildMenu() {
   return Menu.buildFromTemplate([
     {
-      label: "显示阿璇",
-      click: () => petWindow?.showInactive(),
+      label: "显示桌宠",
+      type: "checkbox",
+      checked: settings.petVisible,
+      click: (item) => setPetVisible(item.checked),
     },
     {
       label: "喝水提醒",
@@ -170,7 +184,8 @@ function buildMenu() {
           type: "info",
           title: "阿璇桌宠",
           message: "拖动阿璇可以移动位置，单击会随机播放可爱动作。",
-          detail: "工作日 10:00–22:00 每个整点提醒喝水和活动。右键阿璇可再次打开菜单。",
+          detail:
+            "工作日 10:00–22:00 每个整点提醒喝水和活动。隐藏后，点击菜单栏或系统托盘中的阿璇图标，再勾选“显示桌宠”即可恢复。",
         }),
     },
     { type: "separator" },
@@ -192,8 +207,7 @@ function createTray() {
   tray.setToolTip("阿璇桌宠");
   tray.setContextMenu(buildMenu());
   tray.on("click", () => {
-    if (petWindow?.isVisible()) petWindow.hide();
-    else petWindow?.showInactive();
+    setPetVisible(!petWindow?.isVisible());
   });
 }
 
@@ -210,7 +224,7 @@ const hasSingleInstanceLock = app.requestSingleInstanceLock();
 if (!hasSingleInstanceLock) {
   app.quit();
 } else {
-  app.on("second-instance", () => petWindow?.showInactive());
+  app.on("second-instance", () => setPetVisible(true));
   app.whenReady().then(() => {
     loadSettings();
     registerIpc();
@@ -221,7 +235,7 @@ if (!hasSingleInstanceLock) {
   });
 }
 
-app.on("activate", () => petWindow?.showInactive());
+app.on("activate", () => setPetVisible(true));
 app.on("window-all-closed", () => {});
 app.on("before-quit", () => {
   quitting = true;
